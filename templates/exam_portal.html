@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Exam Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0f7fa, #fce7f3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tabs {
+            display: flex;
+            background: #20b3d2;
+            color: white;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+        }
+
+        .tab:hover, .tab.active {
+            background: #1890a8;
+            transform: scale(1.05);
+        }
+
+        .tab.disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .mcq-section, .sql-section, .name-section {
+            display: none;
+        }
+
+        .mcq-section.active, .sql-section.active, .name-section.active {
+            display: block;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #20b3d2;
+            transition: transform 0.2s ease;
+        }
+
+        .question:hover {
+            transform: translateY(-2px);
+        }
+
+        .question h3 {
+            margin-bottom: 15px;
+            color: #1e293b;
+            font-size: 1.2em;
+        }
+
+        .options label {
+            display: block;
+            padding: 12px;
+            margin: 5px 0;
+            background: #e2e8f0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .options label:hover {
+            background: #b3e5fc;
+        }
+
+        .options input {
+            margin-right: 10px;
+        }
+
+        .sql-editor {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 20px;
+            border: 1px solid #20b3d2;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            resize: none;
+            background: #f8fafc;
+        }
+
+        .sql-editor:disabled {
+            background: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #20b3d2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s ease;
+        }
+
+        .submit-btn, .next-btn, .start-btn {
+            background: #20b3d2;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover, .next-btn:hover, .start-btn:hover {
+            background: #1890a8;
+            transform: scale(1.05);
+        }
+
+        .submit-btn:disabled, .next-btn:disabled, .start-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            display: none;
+            border-left: 4px solid #20b3d2;
+        }
+
+        .results h2 {
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+
+        .correct {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .incorrect {
+            color: #f94d7e;
+            font-weight: bold;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #20b3d2;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message, .warning-message {
+            color: #f94d7e;
+            margin-top: 10px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .sql-problem {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #20b3d2;
+        }
+
+        .sql-problem pre {
+            background: #e2e8f0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .congrats-message {
+            text-align: center;
+            padding: 20px;
+            background: #e6f7fa;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #20b3d2;
+        }
+
+        .congrats-message h2 {
+            color: #20b3d2;
+            margin-bottom: 10px;
+        }
+
+        .name-section {
+            text-align: center;
+        }
+
+        .name-section input {
+            padding: 10px;
+            width: 300px;
+            margin-bottom: 20px;
+            border: 1px solid #20b3d2;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer" id="timer" style="display: none;">MCQ Time: 30:00</div>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" id="name-tab">Enter Name</div>
+            <div class="tab disabled" id="mcq-tab">SQL MCQ Section</div>
+            <div class="tab disabled" id="sql-tab">SQL Coding</div>
+        </div>
+        <div class="content">
+            <div class="name-section active" id="name-section">
+                <h2>Welcome to the SQL Exam</h2>
+                <p>Please enter your name to start the exam.</p>
+                <input type="text" id="student-name" placeholder="Your Name" required>
+                <button class="start-btn" id="start-btn" onclick="startExam()">Start Exam</button>
+                <div class="error-message" id="name-error"></div>
+            </div>
+            <div class="mcq-section" id="mcq-section">
+                <div id="questions"></div>
+                <button class="submit-btn" id="mcq-submit-btn" onclick="submitMCQ()">
+                    <span>Submit MCQ</span>
+                    <span class="loader" id="mcq-loader"></span>
+                </button>
+                <button class="next-btn" id="next-btn" style="display: none;" onclick="switchToSQL()">Next: SQL Coding</button>
+                <div class="error-message" id="mcq-error"></div>
+                <div class="warning-message" id="tab-warning"></div>
+                <div class="results" id="mcq-results"></div>
+            </div>
+            <div class="sql-section" id="sql-section">
+                <div class="sql-problem">
+                    <h2>SQL Coding Section</h2>
+                    <p><strong>Table Structure:</strong></p>
+                    <pre>
+Categories (category_id INTEGER PRIMARY KEY, category_name TEXT)
+Data:
+(1, 'Electronics'), (2, 'Clothing'), (3, 'Books')
+
+Products (product_id INTEGER PRIMARY KEY, product_name TEXT, category_id INTEGER, unit_price REAL)
+Data:
+(1, 'Laptop', 1, 1000.00), (2, 'Smartphone', 1, 600.00),
+(3, 'T-Shirt', 2, 20.00), (4, 'Jeans', 2, 50.00),
+(5, 'Novel', 3, 15.00), (6, 'Textbook', 3, 80.00)
+
+Customers (customer_id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT, email TEXT)
+Data:
+(1, 'Alice', 'Smith', 'alice@example.com'),
+(2, 'Bob', 'Jones', 'bob@example.com'),
+(3, 'Carol', 'Brown', 'carol@example.com')
+
+Orders (order_id INTEGER PRIMARY KEY, customer_id INTEGER, order_date TEXT, total_amount REAL)
+Data:
+(1, 1, '2025-01-01', 1600.00), (2, 2, '2025-01-02', 70.00),
+(3, 3, '2025-01-03', 95.00), (4, 1, '2025-01-04', 600.00)
+
+Order_Items (order_id INTEGER, product_id INTEGER, quantity INTEGER, unit_price REAL, PRIMARY KEY (order_id, product_id))
+Data:
+(1, 1, 1, 1000.00), (1, 2, 1, 600.00),
+(2, 3, 2, 20.00), (2, 4, 1, 30.00),
+(3, 5, 3, 15.00), (3, 6, 1, 50.00),
+(4, 2, 1, 600.00)
+                    </pre>
+                    <p><strong>Instructions:</strong> Write one SQL query per problem. Each correct query awards 2.5 points (max 5 points).</p>
+                </div>
+                <div class="sql-problem">
+                    <h3>Problem 1: Stored Procedure - RankProductsBySales</h3>
+                    <p>Create a stored procedure named <code>RankProductsBySales</code> that accepts a category parameter (TEXT). It should return <code>product_name</code>, <code>category</code> (category_name), <code>total_sales</code> (quantity * unit_price), and <code>sales_rank</code> (using RANK() within each category based on total_sales). Use 'ALL' to return all categories.</p>
+                    <p><strong>Expected Columns:</strong> product_name, category, total_sales, sales_rank</p>
+                    <p><strong>Expected Output (CALL RankProductsBySales('ALL')):</strong></p>
+                    <pre>
+product_name | category     | total_sales | sales_rank
+-------------|--------------|-------------|------------
+Laptop       | Electronics  | 1000.00     | 1
+Smartphone   | Electronics  | 1200.00     | 2
+T-Shirt      | Clothing     | 40.00       | 1
+Jeans        | Clothing     | 30.00       | 2
+Textbook     | Books        | 50.00       | 1
+Novel        | Books        | 45.00       | 2
+                    </pre>
+                    <textarea class="sql-editor" id="sql-editor-1" placeholder="Write your stored procedure here..."></textarea>
+                </div>
+                <div class="sql-problem">
+                    <h3>Problem 2: Scenario Query - Customers with Above-Average Orders</h3>
+                    <p>Write a query to find the <code>first_name</code>, <code>last_name</code>, and <code>email</code> of customers whose orders have a <code>total_amount</code> greater than the average <code>total_amount</code> of all orders in their category. Use JOINs and a subquery.</p>
+                    <p><strong>Expected Columns:</strong> first_name, last_name, email</p>
+                    <p><strong>Expected Output:</strong></p>
+                    <pre>
+first_name | last_name | email
+-----------|-----------|-----------------
+Alice      | Smith     | alice@example.com
+                    </pre>
+                    <textarea class="sql-editor" id="sql-editor-2" placeholder="Write your SQL query here..."></textarea>
+                </div>
+                <button class="submit-btn" id="sql-submit-btn" onclick="submitSQL()">
+                    <span>Submit Exam</span>
+                    <span class="loader" id="sql-loader"></span>
+                </button>
+                <div class="error-message" id="sql-error"></div>
+                <div class="warning-message" id="copy-warning"></div>
+                <div class="results" id="sql-results"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mcqTimeLeft = 1800; // 30 minutes for MCQ
+        let sqlTimeLeft = 1800; // 30 minutes for SQL
+        let currentSection = 'name';
+        let timerInterval = null;
+        let isSubmitted = false;
+        let mcqResults = null;
+        let tabSwitchCount = 0;
+        const maxTabSwitches = 3;
+        let studentName = '';
+
+        function startTimer() {
+            // Clear any existing timer to prevent multiple intervals
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            timerInterval = setInterval(() => {
+                if (isSubmitted) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                if (currentSection === 'mcq') {
+                    mcqTimeLeft--;
+                    const minutes = Math.floor(mcqTimeLeft / 60);
+                    const seconds = mcqTimeLeft % 60;
+                    document.getElementById('timer').textContent = `MCQ Time: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    if (mcqTimeLeft <= 0) {
+                        submitMCQ();
+                    }
+                } else if (currentSection === 'sql') {
+                    sqlTimeLeft--;
+                    const minutes = Math.floor(sqlTimeLeft / 60);
+                    const seconds = sqlTimeLeft % 60;
+                    document.getElementById('timer').textContent = `SQL Time: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    if (sqlTimeLeft <= 0) {
+                        submitSQL();
+                    }
+                }
+            }, 1000);
+        }
+
+        function startExam() {
+            const nameInput = document.getElementById('student-name');
+            const errorDiv = document.getElementById('name-error');
+            studentName = nameInput.value.trim();
+            if (!studentName) {
+                errorDiv.textContent = 'Please enter your name.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            currentSection = 'mcq';
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('timer').textContent = `MCQ Time: 30:00`;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content > div').forEach(c => c.classList.remove('active'));
+            document.getElementById('mcq-tab').classList.add('active');
+            document.getElementById('mcq-section').classList.add('active');
+            startTimer();
+            fetchQuestions();
+        }
+
+        function switchToSQL() {
+            if (isSubmitted || !mcqResults) return;
+            currentSection = 'sql';
+            sqlTimeLeft = 1800; // Reset SQL timer to 30 minutes
+            document.getElementById('timer').textContent = `SQL Time: 30:00`;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content > div').forEach(c => c.classList.remove('active'));
+            document.getElementById('sql-tab').classList.add('active');
+            document.getElementById('sql-section').classList.add('active');
+            startTimer(); // Restart timer for SQL section
+        }
+
+        async function fetchQuestions() {
+            try {
+                const response = await fetch('/get_questions', { timeout: 5000 });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await response.json();
+                const questionsDiv = document.getElementById('questions');
+                questionsDiv.innerHTML = '';
+                data.questions.forEach((q, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    questionDiv.innerHTML = `
+                        <h3>${index + 1}. ${q.question}</h3>
+                        <div class="options">
+                            ${q.options.map((opt, i) => `
+                                <label><input type="radio" name="q${index}" value="${i}" required> ${opt}</label>
+                            `).join('')}
+                        </div>
+                    `;
+                    questionsDiv.appendChild(questionDiv);
+                });
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+                document.getElementById('mcq-error').textContent = 'Failed to load questions. Please refresh the page.';
+                document.getElementById('mcq-error').style.display = 'block';
+            }
+        }
+
+        async function submitMCQ() {
+            if (isSubmitted || currentSection !== 'mcq') return;
+            const submitBtn = document.getElementById('mcq-submit-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const loader = document.getElementById('mcq-loader');
+            const errorDiv = document.getElementById('mcq-error');
+            submitBtn.disabled = true;
+            loader.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+
+            try {
+                const answers = [];
+                let allAnswered = true;
+                for (let i = 0; i < 20; i++) {
+                    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                    if (!selected) allAnswered = false;
+                    answers.push(selected ? parseInt(selected.value) : -1);
+                }
+
+                if (!allAnswered) {
+                    throw new Error('Please answer all questions.');
+                }
+
+                const response = await fetch('/submit_mcq', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answers }),
+                    timeout: 5000
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const result = await response.json();
+                if (result.error) throw new Error(result.error);
+                mcqResults = result;
+                document.getElementById('sql-tab').classList.remove('disabled');
+                displayMCQResults(result);
+                submitBtn.style.display = 'none';
+                nextBtn.style.display = 'inline-flex';
+                clearInterval(timerInterval);
+                document.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            } catch (error) {
+                console.error('Error submitting MCQ:', error);
+                errorDiv.textContent = error.message || 'Failed to submit answers. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayMCQResults(result) {
+            const resultsDiv = document.getElementById('mcq-results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = `
+                <h2>MCQ Results</h2>
+                <p>Score: ${result.score} / ${result.total}</p>
+                ${result.results.map((r, i) => `
+                    <p>Question ${i + 1}: Your answer was ${r.correct ? '<span class="correct">Correct</span>' : '<span class="incorrect">Incorrect</span>'}. 
+                    Correct answer: ${r.correct_answer}</p>
+                `).join('')}
+            `;
+        }
+
+        async function submitSQL() {
+            if (isSubmitted || currentSection !== 'sql') return;
+            const submitBtn = document.getElementById('sql-submit-btn');
+            const loader = document.getElementById('sql-loader');
+            const errorDiv = document.getElementById('sql-error');
+            submitBtn.disabled = true;
+            loader.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+
+            try {
+                const queries = [];
+                for (let i = 1; i <= 2; i++) {
+                    queries.push(document.getElementById(`sql-editor-${i}`).value.trim());
+                }
+                const response = await fetch('/run_sql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ queries, student_name: studentName }),
+                    timeout: 5000
+                });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const result = await response.json();
+                if (result.error) throw new Error(result.error);
+                isSubmitted = true;
+                clearInterval(timerInterval);
+                document.querySelectorAll('.sql-editor').forEach(editor => editor.disabled = true);
+                document.querySelectorAll('.tab').forEach(t => t.classList.add('disabled'));
+                displayFinalResults(result);
+            } catch (error) {
+                console.error('Error running SQL:', error);
+                errorDiv.textContent = error.message || 'Failed to run queries. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayFinalResults(sqlResult) {
+            const resultsDiv = document.getElementById('sql-results');
+            resultsDiv.style.display = 'block';
+            const totalScore = (mcqResults ? mcqResults.score : 0) + sqlResult.score;
+            resultsDiv.innerHTML = `
+                <div class="congrats-message">
+                    <h2>Congratulations, ${studentName}! You submitted!</h2>
+                    <p>Your Total Test Score: ${totalScore} / 25</p>
+                </div>
+                <h2>Final Exam Results</h2>
+                <h3>MCQ Section</h3>
+                <p>Score: ${mcqResults ? mcqResults.score : 0} / ${mcqResults ? mcqResults.total : 20}</p>
+                ${mcqResults ? mcqResults.results.map((r, i) => `
+                    <p>Question ${i + 1}: Your answer was ${r.correct ? '<span class="correct">Correct</span>' : '<span class="incorrect">Incorrect</span>'}. 
+                    Correct answer: ${r.correct_answer}</p>
+                `).join('') : '<p>MCQ not submitted</p>'}
+                <h3>SQL Coding Section</h3>
+                <p>Score: ${sqlResult.score} / ${sqlResult.total}</p>
+                ${sqlResult.results.map(r => `
+                    <h4>${r.name}</h4>
+                    <p>Status: ${r.correct ? '<span class="correct">Correct</span>' : '<span class="incorrect">Incorrect</span>'}</p>
+                    <p>Your Query Result: <pre>${r.error ? r.error : JSON.stringify(r.user_result, null, 2)}</pre></p>
+                `).join('')}
+            `;
+        }
+
+        // Prevent copy-paste in SQL editors
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.sql-editor').forEach(editor => {
+                editor.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    document.getElementById('copy-warning').textContent = 'Copy-paste is disabled for this exam.';
+                    document.getElementById('copy-warning').style.display = 'block';
+                    setTimeout(() => document.getElementById('copy-warning').style.display = 'none', 3000);
+                });
+                editor.addEventListener('copy', (e) => {
+                    e.preventDefault();
+                    document.getElementById('copy-warning').textContent = 'Copy-paste is disabled for this exam.';
+                    document.getElementById('copy-warning').style.display = 'block';
+                    setTimeout(() => document.getElementById('copy-warning').style.display = 'none', 3000);
+                });
+            });
+        });
+
+        // Detect tab/window switches
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && !isSubmitted) {
+                tabSwitchCount++;
+                const warningDiv = document.getElementById('tab-warning');
+                warningDiv.textContent = `Warning: You have switched tabs ${tabSwitchCount}/${maxTabSwitches} times. Stay on this page.`;
+                warningDiv.style.display = 'block';
+                if (tabSwitchCount >= maxTabSwitches) {
+                    alert('Maximum tab switches reached! Submitting exam.');
+                    submitMCQ();
+                    submitSQL();
+                }
+                setTimeout(() => warningDiv.style.display = 'none', 3000);
+            }
+        });
+    </script>
+</body>
+</html>
